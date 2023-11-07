@@ -11,7 +11,7 @@ $fichero = Import-Csv -Path $equiposCsv -Delimiter "$"
 foreach ($line in $fichero)
 {
 
-    New-ADComputer -Enabled:$true -Name $computerName -Path $fullPath -SamAccountName $computerName
+    New-ADComputer -Enabled:$true -Name $computerName -Path $Path -SamAccountName $computerName
 }
 
 Write-Host ""

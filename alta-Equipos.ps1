@@ -14,7 +14,7 @@ foreach ($line in $fichero)
     $path = $line.Path
 
     # Combina el nombre del equipo y la ruta para formar la ubicación completa
-    $fullPath = "$path,$domain"
+    $fullPath = "$line.Path,$domain"
 
     New-ADComputer -Enabled:$true -Name $computerName -Path $fullPath -SamAccountName $computerName
 }

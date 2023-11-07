@@ -1,0 +1,132 @@
+# Variables globales
+$domain = "dc=smr,dc=local"
+
+#
+#Funciones en la cabecera del script
+#
+
+function Show-Menu {
+    param (
+        [string]$Titulo = 'Menú principal'
+    )
+    Clear-Host
+    Write-Host "================ $Titulo ================"
+
+    Write-Host "1: Opción '1' Crear UOs."
+    Write-Host "2: Opción '2' Crear Grupos."
+    Write-Host "3: Opción '3' Crear Usuarios."
+    Write-Host "4: Opción '4' Importar Equipos."
+    Write-Host "Q: Opción 'Q' Salir."
+}
+
+function alta_equipos {
+    $equiposCsv = Read-Host "Introduce el fichero csv de Equipos:"
+    $ficheroImportado = Import-Csv -Path $equiposCsv -Delimiter '$'
+    foreach ($equipo in $ficheroImportado) {
+        $nombreEquipo = $equipo.Nombre
+        $descripcion = $equipo.Descripcion
+        $ubicacion = $equipo.Ubicacion
+        # Puedes agregar más propiedades de equipos aquí según tus necesidades
+
+        # Ejemplo de lo que puedes hacer con los datos del equipo
+        # En este caso, simplemente mostramos la información, pero puedes personalizar la creación de equipos en Active Directory según tus necesidades.
+        Write-Host "Nombre de Equipo: $nombreEquipo"
+        Write-Host "Descripción: $descripcion"
+        Write-Host "Ubicación: $ubicacion"
+        Write-Host "---------------------"
+    }
+}
+
+function alta_UOs {
+    $ficheroCsvUO = Read-Host "Introduce el fichero csv de UO's:"
+    $ficheroImportado = Import-Csv -Path $ficheroCsvUO -Delimiter ':'
+    foreach ($line in $ficheroImportado) {
+        New-ADOrganizationalUnit -Description:$line.Description -Name:$line.Name `
+            -Path:$line.Path -ProtectedFromAccidentalDeletion:$true
+    }
+    Write-Host "Se han creado las UOs satisfactoriamente en el dominio $domain"
+}
+
+function alta_grupos {
+    $gruposCsv = Read-Host "Introduce el fichero csv de Grupos:"
+    $ficheroImportado = Import-Csv -Path $gruposCsv -Delimiter ':'
+    foreach ($linea in $ficheroImportado) {
+        New-ADGroup -Name:$linea.Name -Description:$linea.Description `
+            -GroupCategory:$linea.Category `
+            -GroupScope:$linea.Scope `
+            -Path:$linea.Path
+    }
+    Write-Host "Se han creado las grupos satisfactoriamente en el dominio $domain"
+}
+
+function alta_usuarios {
+    $fileUsersCsv = Read-Host "Introduce el fichero csv de los usuarios:"
+    $ficheroImportado = Import-Csv -Path $fileUsersCsv -Delimiter ':'
+    foreach ($linea in $ficheroImportado) {
+        $passAccount = ConvertTo-SecureString $linea.DNI -AsPlainText -force
+        $Surnames = $linea.FirstName + ' ' + $linea.LastName
+        $nameLarge = $linea.Name + ' ' + $linea.FirstName + ' ' + $linea.LastName
+        $email = $linea.Email
+        [boolean]$Habilitado = $true
+        If ($linea.Enabled -match 'false') { $Habilitado = $false }
+        # Establecer los días de expiración de la cuenta (Columna del csv ExpirationAccount)
+        $ExpirationAccount = $linea.ExpirationAccount
+        $timeExp = (Get-Date).AddDays($ExpirationAccount)
+
+        # Ejecutamos el comando para crear el usuario
+        New-ADUser -SamAccountName $linea.Account -UserPrincipalName $linea.Account -Name $linea.Account `
+            -Surname $Surnames -DisplayName $nameLarge -GivenName $linea.Name `
+            -Description "Cuenta de $nameLarge" -EmailAddress $email `
+            -AccountPassword $passAccount -Enabled $Habilitado `
+            -CannotChangePassword $false -ChangePasswordAtLogon $true `
+            -PasswordNotRequired $false -Path $linea.Path -AccountExpirationDate $timeExp `
+            -LogonWorkstations $linea.computer
+
+        # Establecer horario de inicio de sesión
+        $horassesion = $linea.NetTime -replace " ", ""
+        net user $linea.Account /times:$horassesion
+
+        # Asignar cuenta de Usuario a Grupo
+        # Distingued Name CN=Nombre-grupo,ou=..,ou=..,dc=..,dc=...
+        # En este caso el grupo se encuentra en la misma UO que el usuario
+        $cnGrpAccount = "Cn=" + $linea.Group + "," + $linea.Path
+        Add-ADGroupMember -Identity $cnGrpAccount -Members $linea.Account
+    }
+    Write-Host "Se han creado los usuarios correctamente en el dominio $domain"
+}
+
+# Primero comprobaremos si se tiene cargado el módulo Active Directory
+if (!(Get-Module -Name ActiveDirectory)) {
+    Import-Module ActiveDirectory
+}
+
+#
+# MENU PRINCIPAL
+#
+do {
+    Show-Menu
+    $input = Read-Host "Por favor, pulse una opción"
+    switch ($input) {
+        '1' {
+            Clear-Host
+            alta_UOs
+        }
+        '2' {
+            Clear-Host
+            alta_grupos
+        }
+        '3' {
+            Clear-Host
+            alta_usuarios
+        }
+        '4' {
+            Clear-Host
+            alta_equipos
+        }
+        'q' {
+            'Salimos de la App'
+            return
+        }
+    }
+    pause
+} until ($input -eq 'q')

@@ -39,7 +39,7 @@ foreach ($linea in $fichero)
         -LogonWorkstations $linea.computer
 
     # Establecer horario de inicio de sesión
-    $horassesion = $linea.NetTime -replace " ", ""
+    $horassesion = $linea.NetTime -replace (" ", "")
     net user $linea.account /times:$horassesion
 
     # Asignar cuenta de Usuario a Grupo

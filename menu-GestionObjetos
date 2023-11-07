@@ -15,7 +15,7 @@ function Show-Menu {
     Write-Host "1: Opción '1' Crear UOs."
     Write-Host "2: Opción '2' Crear Grupos."
     Write-Host "3: Opción '3' Crear Usuarios."
-    Write-Host "4: Opción '4' Importar Equipos."
+    Write-Host "4: Opción '4' Crear Equipos."
     Write-Host "Q: Opción 'Q' Salir."
 }
 
@@ -23,17 +23,9 @@ function alta_equipos {
     $equiposCsv = Read-Host "Introduce el fichero csv de Equipos:"
     $ficheroImportado = Import-Csv -Path $equiposCsv -Delimiter '$'
     foreach ($equipo in $ficheroImportado) {
-        $nombreEquipo = $equipo.Nombre
-        $descripcion = $equipo.Descripcion
-        $ubicacion = $equipo.Ubicacion
-        # Puedes agregar más propiedades de equipos aquí según tus necesidades
-
-        # Ejemplo de lo que puedes hacer con los datos del equipo
-        # En este caso, simplemente mostramos la información, pero puedes personalizar la creación de equipos en Active Directory según tus necesidades.
-        Write-Host "Nombre de Equipo: $nombreEquipo"
-        Write-Host "Descripción: $descripcion"
-        Write-Host "Ubicación: $ubicacion"
-        Write-Host "---------------------"
+        $nombreEquipo = $computerName
+        $path = $
+        
     }
 }
 
@@ -89,8 +81,8 @@ function alta_usuarios {
         # Asignar cuenta de Usuario a Grupo
         # Distingued Name CN=Nombre-grupo,ou=..,ou=..,dc=..,dc=...
         # En este caso el grupo se encuentra en la misma UO que el usuario
-        $cnGrpAccount = "Cn=" + $linea.Group + "," + $linea.Path
-        Add-ADGroupMember -Identity $cnGrpAccount -Members $linea.Account
+        $cnGrpAccount = "Cn=" + $linea.Department + "," + $linea.Path
+        Add-ADGroupMember -Identity $linea.Name -Members $linea.Account
     }
     Write-Host "Se han creado los usuarios correctamente en el dominio $domain"
 }

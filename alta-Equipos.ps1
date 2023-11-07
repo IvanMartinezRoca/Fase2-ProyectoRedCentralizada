@@ -10,7 +10,7 @@ $fichero = Import-Csv -Path $equiposCsv -Delimiter "$"
 
 foreach ($line in $fichero)
 {
-    # Combina el nombre del equipo y la ruta para formar la ubicación completa
+    # Combinamos el nombre del equipo y la ruta para formar la ubicación completa
     $fullPath = "$line.Path,$domain"
 
     New-ADComputer -Enabled:$true -Name $computerName -Path $fullPath -SamAccountName $computerName

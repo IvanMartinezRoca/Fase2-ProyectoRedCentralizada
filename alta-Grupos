@@ -10,11 +10,6 @@ $fichero = Import-Csv -Path $gruposCsv -Delimiter "$"
 
 foreach ($linea in $fichero)
 {
-    $name = $linea.Name
-    $path = $linea.Path
-    $description = $linea.Description
-    $category = $linea.Category
-    $scope = $linea.Scope
 
     New-ADGroup -Name $linea.Name -Description $linea.Description -GroupCategory $linea.Category -GroupScope $linea.Scope -Path $linea.Path
 }

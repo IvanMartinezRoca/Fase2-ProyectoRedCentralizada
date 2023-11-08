@@ -18,11 +18,11 @@ $fichero = Import-Csv -Path $fileUsersCsv -Delimiter "*"
 
 foreach ($linea in $fichero)
 {
-    $passAccount = ConvertTo-SecureString $linea.Password -AsPlainText -Force
-    $Surnames = $linea.Surname + ' ' + $linea.Surname1 + ' ' + $linea.Surname2
-    $nameLarge = $linea.Name + ' ' + $linea.Surname + ' ' + $linea.Surname1
-    $email = $linea.email
-    [boolean]$Habilitado = $true
+    $passAccount=ConvertTo-SecureString $linea.Password -AsPlainText -Force
+    $Surnames=$linea.Surname
+    $nameLarge=$linea.Name+' '+$linea.Surname
+    $email=$linea.email
+    [boolean]$Habilitado=$true
     If ($linea.Enabled -match 'false') { $Habilitado = $false }
 
     # Establecer los días de expiración de la cuenta (Columna del csv ExpirationAccount)

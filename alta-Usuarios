@@ -1,55 +1,37 @@
-# El fichero csv usado tiene estos campos/columnas
-# Name*Surname*Surname1*Surname2*account*path*dni*Departament*Enabled*Password*ExpirationAccount*email*NetTime*computer*Group
-
-# Ponemos el Domain Component para el dominio en cuestión, que para este caso es smr.local
-$domain = "dc=smr,dc=local"
-
-# Primero comprobaremos si se tiene cargado el módulo Active Directory
-if (!(Get-Module -Name ActiveDirectory)) # Accederá al then solo si no existe una entrada llamada ActiveDirectory
+$domain="dc=IESMiralcamp,dc=mylocal"
+if (!(Get-Module -Name ActiveDirectory))
 {
-    Import-Module ActiveDirectory # Se carga el módulo
-}
-
-# Creación de los usuarios
-$fileUsersCsv = Read-Host "Introduce el fichero csv de los usuarios:"
-
-# Los campos del fichero csv están separados por el carácter *
-$fichero = Import-Csv -Path $fileUsersCsv -Delimiter "*"
-
-foreach ($linea in $fichero)
+  Import-Module ActiveDirectory
+  }
+  $fileUsersCsv=Read-Host "Introduce el fichero csv de los usuarios:"
+  $fichero = import-csv -Path $fileUsersCsv -Delimiter "$"
+  
+  foreach($linea in $fichero)
 {
-    $passAccount=ConvertTo-SecureString $linea.Password -AsPlainText -Force
-    $Surnames=$linea.Surname
-    $nameLarge=$linea.Name+' '+$linea.Surname
-    $email=$linea.email
-    [boolean]$Habilitado=$true
-    If ($linea.Enabled -match 'false') { $Habilitado = $false }
-
-    # Establecer los días de expiración de la cuenta (Columna del csv ExpirationAccount)
-    $ExpirationAccount = $linea.ExpirationAccount
-    $timeExp = (Get-Date).AddDays($ExpirationAccount)
-
-    # Ejecutamos el comando para crear el usuario
-    New-ADUser -SamAccountName $linea.account -UserPrincipalName $linea.account -Name $linea.account `
-        -Surname $Surnames -DisplayName $nameLarge -GivenName $linea.Name `
-        -Description "Cuenta de $nameLarge" -EmailAddress $email `
-        -AccountPassword $passAccount -Enabled $Habilitado `
-        -CannotChangePassword $false -ChangePasswordAtLogon $true `
-        -PasswordNotRequired $false -Path $linea.path -AccountExpirationDate $timeExp `
-        -LogonWorkstations $linea.computer
-
-    # Establecer horario de inicio de sesión
-    $horassesion = $linea.NetTime -replace (" ", "")
-    net user $linea.account /times:$horassesion
-
-    # Asignar cuenta de Usuario a Grupo
-    # Distinguished Name CN=Nombre-grupo,ou=..,ou=..,dc=..,dc=...
-    $cnGrpAccount = "CN=" + $linea.Group + "," + $linea.path
-    Add-ADGroupMember -Identity $cnGrpAccount -Members $linea.account
-}
-
-Write-Host "Se han creado los usuarios correctamente en el dominio $domain"
-
-}
-
-Write-Host "Se han creado los usuarios correctamente en el dominio $domain"
+	
+	$passAccount=ConvertTo-SecureString $linea.Password -AsPlainText -force
+	$Surnames=$linea.FirstName+' '+$linea.LastName
+	$nameLarge=$linea.Name+' '+$linea.FirstName+' '+$linea.LastName
+	$email=$linea.Email
+	[boolean]$Habilitado=$true
+    	If($linea.Enabled -Match 'false') { $Habilitado=$false}
+	
+   	$ExpirationAccount = $linea.ExpirationAccount
+    	$timeExp = (get-date).AddDays($ExpirationAccount)
+    	
+    	New-ADUser -SamAccountName $linea.Account -UserPrincipalName $linea.Account -Name $linea.Account `
+		-Surname $Surnames -DisplayName $nameLarge -GivenName $linea.Name `
+		-Description "Cuenta de $nameLarge" -EmailAddress $email `
+		-AccountPassword $passAccount -Enabled $Habilitado `
+		-CannotChangePassword $false -ChangePasswordAtLogon $true `
+		-PasswordNotRequired $false -Path $linea.Path -AccountExpirationDate $timeExp
+  		-LogonWorkstations $linea.computer
+		
+		 $horassesion = $linea.NetTime -replace(" ","")
+      		  net user $linea.Account /times:$horassesion 
+        
+        $cnGrpAccount="Cn="+$linea.Group+","+$linea.Path2
+	Add-ADGroupMember -Identity $cnGrpAccount -Members $linea.Account
+	
+	} 
+Write-Host "Se han creado los usuarios correctamente en el dominio $domain" 
